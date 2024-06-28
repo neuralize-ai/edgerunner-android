@@ -90,8 +90,4 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.5.21")
-    implementation("org.bytedeco:javacpp:1.5.6")
-    implementation("org.bytedeco:javacpp-presets:1.5.6")
 }
