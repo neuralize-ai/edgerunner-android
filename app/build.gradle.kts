@@ -1,6 +1,35 @@
+import com.android.build.gradle.internal.tasks.factory.dependsOn
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+}
+
+tasks.register("conanInstall") {
+    doFirst {
+        val conanExecutable = "conan"
+        val buildDir = File("app/build")
+        buildDir.mkdirs()
+        val buildTypes = listOf("Debug", "Release")
+        val arch = "armv8"
+        buildTypes.forEach { buildType ->
+            val cmd =
+                "$conanExecutable install ../src/main/cpp --profile android -s build_type=$buildType -s arch=$arch --build missing -c tools.cmake.cmake_layout:build_folder_vars=['settings.arch']"
+            println(">> $cmd \n")
+            val process = ProcessBuilder(cmd.split(" "))
+                .directory(buildDir)
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.PIPE)
+                .start()
+            val sout = process.inputStream.bufferedReader().readText()
+            val serr = process.errorStream.bufferedReader().readText()
+            process.waitFor()
+            println("$sout $serr")
+            if (process.exitValue() != 0) {
+                throw Exception("out> $sout err> $serr\nCommand: $cmd")
+            }
+        }
+    }
 }
 
 android {
@@ -18,6 +47,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++17"
+                arguments("-DCMAKE_TOOLCHAIN_FILE=conan_android_toolchain.cmake")
             }
         }
     }
@@ -47,6 +77,8 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
+    project.tasks.preBuild.dependsOn("conanInstall")
 }
 
 dependencies {
