@@ -2,7 +2,7 @@ package com.neuralize.edgerunner
 
 import java.nio.ByteBuffer
 
-ensorType {
+enum class TensorType {
     UNSUPPORTED,
     NOTYPE,
     FLOAT32,
