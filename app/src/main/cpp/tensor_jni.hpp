@@ -17,6 +17,10 @@ public:
 
   size_t getSize() const { return m_tensor->getSize(); }
 
+  template <typename T> nonstd::span<T> getTensorAs() {
+    return m_tensor->getTensorAs<T>();
+  }
+
 private:
   std::shared_ptr<edge::Tensor> m_tensor;
 };

@@ -32,6 +32,13 @@ JNIEXPORT jlong JNICALL Java_com_neuralize_edgerunner_Tensor_nativeGetSize(
   return static_cast<jlong>(jniTensor->getSize());
 }
 
+JNIEXPORT jobject JNICALL Java_com_neuralize_edgerunner_Tensor_nativeGetBuffer(
+    JNIEnv *env, jobject obj, jlong nativeHandle) {
+  auto jniTensor = reinterpret_cast<JniTensor *>(nativeHandle);
+  auto span = jniTensor->getTensorAs<uint8_t>();
+  return env->NewDirectByteBuffer(span.data(), span.size());
+}
+
 JNIEXPORT void JNICALL Java_com_neuralize_edgerunner_Tensor_nativeDestroy(
     JNIEnv *env, jobject obj, jlong nativeHandle) {
   auto jniTensor = reinterpret_cast<JniTensor *>(nativeHandle);
