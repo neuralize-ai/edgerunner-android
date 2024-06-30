@@ -1,5 +1,16 @@
 package com.neuralize.edgerunner
 
+enum class Delegate {
+    CPU,
+    GPU,
+    NPU,
+}
+
+enum class Status {
+    SUCCESS,
+    FAIL,
+}
+
 class Model(private val modelPath: String) {
     private var nativeHandle: Long = 0
 
@@ -30,16 +41,18 @@ class Model(private val modelPath: String) {
         return if (tensorHandle != 0L) Tensor(tensorHandle) else null
     }
 
-    fun getDelegate(): Int {
-        return nativeGetDelegate(nativeHandle)
+    fun getDelegate(): Delegate {
+        val delegate = nativeGetDelegate(nativeHandle)
+        return Delegate.values().first { it.ordinal == delegate }
     }
 
-    fun applyDelegate(delegate: Int): Int {
-        return nativeApplyDelegate(nativeHandle, delegate)
+    fun applyDelegate(delegate: Delegate): Int {
+        return nativeApplyDelegate(nativeHandle, delegate.ordinal)
     }
 
-    fun execute(): Int {
-        return nativeExecute(nativeHandle)
+    fun execute(): Status {
+        val statusValue = nativeExecute(nativeHandle)
+        return Status.values().first { it.ordinal == statusValue }
     }
 
     protected fun finalize() {
