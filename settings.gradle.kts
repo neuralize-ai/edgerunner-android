@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Edgerunner"
 include(":edgerunner")
+include(":imageclassifier")
