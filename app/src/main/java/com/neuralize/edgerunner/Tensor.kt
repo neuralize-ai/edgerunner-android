@@ -2,6 +2,17 @@ package com.neuralize.edgerunner
 
 import java.nio.ByteBuffer
 
+ensorType {
+    UNSUPPORTED,
+    NOTYPE,
+    FLOAT32,
+    FLOAT16,
+    INT32,
+    UINT32,
+    INT8,
+    UINT8,
+}
+
 class Tensor(private val nativeHandle: Long) {
     init {
         System.loadLibrary("tensor_jni")
@@ -11,8 +22,9 @@ class Tensor(private val nativeHandle: Long) {
         return nativeGetName(nativeHandle)
     }
 
-    fun getType(): Int {
-        return nativeGetType(nativeHandle)
+    fun getType(): TensorType {
+        val typeValue = nativeGetType(nativeHandle)
+        return TensorType.values().first { it.ordinal == typeValue }
     }
 
     fun getDimensions(): LongArray {
@@ -43,4 +55,3 @@ class Tensor(private val nativeHandle: Long) {
 
     private external fun nativeDestroy(nativeHandle: Long)
 }
-
