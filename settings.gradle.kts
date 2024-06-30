@@ -20,4 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Edgerunner"
-include(":app")
+include(":edgerunner")

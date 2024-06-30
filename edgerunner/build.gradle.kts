@@ -1,32 +1,35 @@
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
 }
 
 tasks.register("conanInstall") {
     doFirst {
         val conanExecutable = "conan"
-        val buildDir = File("app/build")
+        val buildDir = File("edgerunner/build")
         buildDir.mkdirs()
         val buildTypes = listOf("Debug", "Release")
-        val arch = "armv8"
+        val architectures = listOf("armv7", "armv8", "x86", "x86_64")
         buildTypes.forEach { buildType ->
-            val cmd =
-                "$conanExecutable install ../src/main/cpp --profile android -s build_type=$buildType -s arch=$arch --build missing -c tools.cmake.cmake_layout:build_folder_vars=['settings.arch']"
-            println(">> $cmd \n")
-            val process = ProcessBuilder(cmd.split(" "))
-                .directory(buildDir)
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
-            val sout = process.inputStream.bufferedReader().readText()
-            val serr = process.errorStream.bufferedReader().readText()
-            process.waitFor()
-            println("$sout $serr")
-            if (process.exitValue() != 0) {
-                throw Exception("out> $sout err> $serr\nCommand: $cmd")
+            architectures.forEach { arch ->
+                val cmd =
+                    "$conanExecutable install ../src/main/cpp --profile android -s build_type=$buildType -s arch=$arch --build missing -c tools.cmake.cmake_layout:build_folder_vars=['settings.arch']"
+                println(">> $cmd \n")
+                val process =
+                    ProcessBuilder(cmd.split(" "))
+                        .directory(buildDir)
+                        .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                        .redirectError(ProcessBuilder.Redirect.PIPE)
+                        .start()
+                val sout = process.inputStream.bufferedReader().readText()
+                val serr = process.errorStream.bufferedReader().readText()
+                process.waitFor()
+                println("$sout $serr")
+                if (process.exitValue() != 0) {
+                    throw Exception("out> $sout err> $serr\nCommand: $cmd")
+                }
             }
         }
     }
@@ -37,11 +40,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.neuralize.edgerunner"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
@@ -57,7 +56,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -73,9 +72,6 @@ android {
             path = file("src/main/cpp/CMakeLists.txt")
             version = "3.22.1"
         }
-    }
-    buildFeatures {
-        viewBinding = true
     }
 
     project.tasks.preBuild.dependsOn("conanInstall")
