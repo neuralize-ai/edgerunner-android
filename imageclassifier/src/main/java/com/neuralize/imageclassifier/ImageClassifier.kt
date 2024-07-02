@@ -57,4 +57,12 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
             null
         }
     }
+
+    private fun bitmapToMat(bitmap: Bitmap): Mat {
+        val mat = Mat()
+        Utils.bitmapToMat(bitmap, mat)
+        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGBA2RGB)
+        mat.convertTo(mat, CvType.CV_32F, 1.0 / 255)
+        return mat
+    }
 }
