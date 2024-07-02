@@ -4,7 +4,7 @@
 
 class JniTensor {
 public:
-  JniTensor(std::shared_ptr<edge::Tensor> tensor)
+  explicit JniTensor(std::shared_ptr<edge::Tensor> tensor)
       : m_tensor(std::move(tensor)) {}
 
   std::string getName() const { return m_tensor->getName(); }

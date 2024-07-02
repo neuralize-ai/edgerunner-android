@@ -20,7 +20,7 @@ Java_com_neuralize_edgerunner_Tensor_nativeGetDimensions(JNIEnv *env,
                                                          jlong nativeHandle) {
   auto jniTensor = reinterpret_cast<JniTensor *>(nativeHandle);
   auto dimensions = jniTensor->getDimensions();
-  jlongArray result = env->NewLongArray(dimensions.size());
+  jlongArray result = env->NewLongArray(static_cast<int>(dimensions.size()));
   env->SetLongArrayRegion(result, 0, dimensions.size(),
                           reinterpret_cast<const jlong *>(dimensions.data()));
   return result;

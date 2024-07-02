@@ -6,8 +6,11 @@
 
 class JniModel {
 public:
-  JniModel(const std::string &modelPath)
+  explicit JniModel(const std::string &modelPath)
       : m_model(edge::createModel(modelPath)) {}
+
+  explicit JniModel(const nonstd::span<uint8_t> &modelBuffer)
+      : m_model(edge::createModel(modelBuffer)) {}
 
   size_t getNumInputs() const { return m_model->getNumInputs(); }
 
@@ -17,7 +20,7 @@ public:
     auto tensor = m_model->getInput(index);
 
     if (tensor) {
-      JniTensor *tensorPtr = new JniTensor(tensor);
+      auto *tensorPtr = new JniTensor(tensor);
       return reinterpret_cast<jlong>(tensorPtr);
     }
 
@@ -28,7 +31,7 @@ public:
     auto tensor = m_model->getOutput(index);
 
     if (tensor) {
-      JniTensor *tensorPtr = new JniTensor(tensor);
+      auto *tensorPtr = new JniTensor(tensor);
       return reinterpret_cast<jlong>(tensorPtr);
     }
 
@@ -42,7 +45,9 @@ public:
         m_model->applyDelegate(static_cast<edge::DELEGATE>(delegate)));
   }
 
-  jint execute() { return static_cast<jint>(m_model->execute()); }
+  jint execute() {
+    return static_cast<jint>(m_model->execute());
+  }
 
   std::string getName() const { return m_model->name(); }
 
