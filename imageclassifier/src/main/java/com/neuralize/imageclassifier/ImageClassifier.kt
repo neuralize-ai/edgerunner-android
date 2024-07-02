@@ -65,4 +65,28 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
         mat.convertTo(mat, CvType.CV_32F, 1.0 / 255)
         return mat
     }
+    private fun resizeImage(
+        image: Mat,
+        height: Int,
+        width: Int,
+    ) {
+        val scaleDimSize = maxOf(height, width)
+
+        // next power of two
+        val scaledSize = 1 shl (32 - Integer.numberOfLeadingZeros(scaleDimSize - 1))
+
+        val imageHeight = image.rows()
+        val imageWidth = image.cols()
+
+        val longDim = maxOf(imageHeight, imageWidth).toFloat()
+        val shortDim = minOf(imageHeight, imageWidth).toFloat()
+
+        val newLong = (scaledSize.toFloat() * longDim / shortDim).toInt()
+
+        val newHeight = if (imageHeight > imageWidth) newLong else scaledSize
+        val newWidth = if (imageHeight > imageWidth) scaledSize else newLong
+
+        Imgproc.resize(image, image, Size(newWidth.toDouble(), newHeight.toDouble()), 0.0, 0.0, Imgproc.INTER_LINEAR)
+    }
+
 }
