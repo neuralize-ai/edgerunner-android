@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.util.Log
 import com.neuralize.edgerunner.Model
 import com.neuralize.edgerunner.Status
+import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
 import org.opencv.core.Core
 import org.opencv.core.CvType
@@ -14,36 +15,46 @@ import org.opencv.core.Rect
 import org.opencv.core.Scalar
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
-import org.opencv.android.OpenCVLoader
 import java.io.IOException
 import java.nio.ByteBuffer
 import kotlin.math.exp
 import kotlin.math.floor
-import kotlin.time.Duration
+import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
+
+data class Results(
+    var loadTime: Long = 0,
+    var inferenceTime: Long = 0,
+    var totalTime: Long = 0,
+    var prediction: String = "",
+    var probability: Float = 0.0F,
+)
 
 class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
     private var model: Model
     private val labelList: List<String>
+    private var loadTime: Long
 
     init {
         OpenCVLoader.initLocal()
 
-        model = Model(modelBuffer.asReadOnlyBuffer())
+        loadTime = measureTime {
+            model = Model(modelBuffer.asReadOnlyBuffer())
+        }.inWholeMilliseconds
 
         labelList = loadLabelList("imagenet_labels.txt")
     }
 
-    fun classify(imageFilename: String): String {
+    fun classify(imageFilename: String): Results {
+        val results = Results(loadTime = loadTime)
+
         // load image
-        val bitmap = loadImageFromAssets(context, imageFilename) ?: return ""
+        val bitmap = loadImageFromAssets(context, imageFilename) ?: return results
         var image = bitmapToMat(bitmap)
 
-        var inferenceTime: Duration
-        val (result, totalTime) = measureTimedValue {
-
+        results.totalTime = measureTime {
             // preprocess
-            val input = model.getInput(0) ?: return ""
+            val input = model.getInput(0) ?: return results
 
             val inputDimensions = input.getDimensions()
 
@@ -63,30 +74,27 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
                 model.execute()
             }
 
-            inferenceTime = timeTaken
+            results.inferenceTime = timeTaken.inWholeMilliseconds
 
             if (executionStatus != Status.SUCCESS) {
-                return ""
+                return results
             }
 
             // post process
-            val output = model.getOutput(0) ?: return ""
+            val output = model.getOutput(0) ?: return results
 
             val outputBuffer = output.getBuffer()
 
             val probabilities = softmax(outputBuffer)
 
             val probabilityIndex = topIndex(probabilities)
-            val probability = probabilities[probabilityIndex]
+            results.probability = probabilities[probabilityIndex]
             val labelIndex = probabilityIndex + 1
 
-            labelList[labelIndex]
-        }
+            results.prediction = labelList[labelIndex]
+        }.inWholeMilliseconds
 
-        Log.d("ImageClassifier", "inferenceTime: ${inferenceTime}")
-        Log.d("ImageClassifier", "totalTime: ${totalTime}")
-
-        return result
+        return results
     }
 
     private fun loadLabelList(labelsFileName: String): List<String> {
@@ -139,7 +147,14 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
         val newHeight = if (imageHeight > imageWidth) newLong else scaledSize
         val newWidth = if (imageHeight > imageWidth) scaledSize else newLong
 
-        Imgproc.resize(image, image, Size(newWidth.toDouble(), newHeight.toDouble()), 0.0, 0.0, Imgproc.INTER_LINEAR)
+        Imgproc.resize(
+            image,
+            image,
+            Size(newWidth.toDouble(), newHeight.toDouble()),
+            0.0,
+            0.0,
+            Imgproc.INTER_LINEAR
+        )
     }
 
     private fun centerCropImage(
@@ -185,17 +200,29 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
         Core.divide(image, std, image)
     }
 
-    private fun printPixel(buffer: ByteBuffer, width: Int, channels: Int, hIndex: Int, wIndex: Int) {
+    private fun printPixel(
+        buffer: ByteBuffer,
+        width: Int,
+        channels: Int,
+        hIndex: Int,
+        wIndex: Int,
+    ) {
         val red = buffer.asFloatBuffer().get(hIndex * width * channels + wIndex * channels)
         val green = buffer.asFloatBuffer().get(hIndex * width * channels + wIndex * channels + 1)
         val blue = buffer.asFloatBuffer().get(hIndex * width * channels + wIndex * channels + 2)
-        Log.d("ImageClassifier", "pixel (${hIndex}, ${wIndex}): [${red}, ${green}, ${blue}")
+        Log.d("ImageClassifier", "pixel ($hIndex, $wIndex): [$red, $green, $blue")
     }
 
-    private fun printBuffer(buffer: ByteBuffer, message: String) {
+    private fun printBuffer(
+        buffer: ByteBuffer,
+        message: String,
+    ) {
         val bufferArray = FloatArray(buffer.asFloatBuffer().remaining())
         buffer.asFloatBuffer().get(bufferArray)
-        Log.d("ImageClassifier", "${message}:\nsize: ${bufferArray.size}\nvalues: ${bufferArray.joinToString(", ")}")
+        Log.d(
+            "ImageClassifier",
+            "$message:\nsize: ${bufferArray.size}\nvalues: ${bufferArray.joinToString(", ")}"
+        )
     }
 
     private fun writeImageToInputBuffer(
@@ -225,7 +252,8 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
         val outputList = FloatArray(floatBuffer.remaining())
         floatBuffer.get(outputList)
 
-        val maxOutput = outputList.maxOrNull() ?: throw IllegalArgumentException("output buffer is empty")
+        val maxOutput =
+            outputList.maxOrNull() ?: throw IllegalArgumentException("output buffer is empty")
 
         val softmaxValues = outputList.map { exp((it - maxOutput).toDouble()).toFloat() }
 
