@@ -43,4 +43,18 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
         val labels = inputStream.bufferedReader().use { it.readLines() }
         return labels
     }
+
+    private fun loadImageFromAssets(
+        context: Context,
+        fileName: String,
+    ): Bitmap? {
+        return try {
+            val assetManager = context.assets
+            val inputStream = assetManager.open(fileName)
+            BitmapFactory.decodeStream(inputStream)
+        } catch (e: IOException) {
+            e.printStackTrace()
+            null
+        }
+    }
 }
