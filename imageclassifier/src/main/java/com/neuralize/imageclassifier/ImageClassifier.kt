@@ -144,4 +144,26 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
         buffer.asFloatBuffer().get(bufferArray)
         Log.d("ImageClassifier", "${message}:\nsize: ${bufferArray.size}\nvalues: ${bufferArray.joinToString(", ")}")
     }
+
+    private fun writeImageToInputBuffer(
+        image: Mat,
+        buffer: ByteBuffer,
+    ) {
+        val height = image.rows()
+        val width = image.cols()
+
+        val numChannels = image.channels()
+        val rowSize = width * numChannels * 4 // 4 bytes per float
+
+        for (i in 0 until height) {
+            val hOffset = i * rowSize
+            for (j in 0 until width) {
+                val wOffset = hOffset + j * numChannels * 4
+                val pixel = image.get(i, j)
+                buffer.putFloat(wOffset, pixel[0].toFloat())
+                buffer.putFloat(wOffset + 4, pixel[1].toFloat())
+                buffer.putFloat(wOffset + 8, pixel[2].toFloat())
+            }
+        }
+    }
 }
