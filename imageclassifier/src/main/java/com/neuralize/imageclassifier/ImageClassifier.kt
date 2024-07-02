@@ -131,4 +131,17 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
         Core.subtract(image, mean, image)
         Core.divide(image, std, image)
     }
+
+    private fun printPixel(buffer: ByteBuffer, width: Int, channels: Int, hIndex: Int, wIndex: Int) {
+        val red = buffer.asFloatBuffer().get(hIndex * width * channels + wIndex * channels)
+        val green = buffer.asFloatBuffer().get(hIndex * width * channels + wIndex * channels + 1)
+        val blue = buffer.asFloatBuffer().get(hIndex * width * channels + wIndex * channels + 2)
+        Log.d("ImageClassifier", "pixel (${hIndex}, ${wIndex}): [${red}, ${green}, ${blue}")
+    }
+
+    private fun printBuffer(buffer: ByteBuffer, message: String) {
+        val bufferArray = FloatArray(buffer.asFloatBuffer().remaining())
+        buffer.asFloatBuffer().get(bufferArray)
+        Log.d("ImageClassifier", "${message}:\nsize: ${bufferArray.size}\nvalues: ${bufferArray.joinToString(", ")}")
+    }
 }
