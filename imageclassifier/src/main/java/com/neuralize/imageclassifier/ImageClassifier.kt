@@ -89,4 +89,38 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
         Imgproc.resize(image, image, Size(newWidth.toDouble(), newHeight.toDouble()), 0.0, 0.0, Imgproc.INTER_LINEAR)
     }
 
+    private fun centerCropImage(
+        image: Mat,
+        cropHeight: Int,
+        cropWidth: Int,
+    ): Mat {
+        var imageHeight = image.rows()
+        var imageWidth = image.cols()
+
+        if (cropHeight > imageWidth || cropWidth > imageHeight) {
+            val padLeft = (cropHeight - imageWidth) / 2
+            val padTop = (cropWidth - imageHeight) / 2
+            val padRight = (cropHeight - imageWidth + 1) / 2
+            val padBottom = (cropWidth - imageHeight + 1) / 2
+
+            Core.copyMakeBorder(
+                image,
+                image,
+                padTop,
+                padBottom,
+                padLeft,
+                padRight,
+                Core.BORDER_CONSTANT,
+                Scalar(0.0, 0.0, 0.0),
+            )
+            imageHeight = image.rows()
+            imageWidth = image.cols()
+        }
+
+        val cropTop = floor((imageHeight - cropWidth) / 2.0).toInt()
+        val cropLeft = floor((imageWidth - cropHeight) / 2.0).toInt()
+
+        val cropRegion = Rect(cropLeft, cropTop, cropHeight, cropWidth)
+        return image.submat(cropRegion)
+    }
 }
