@@ -1,6 +1,7 @@
 package com.neuralize.edgerunner
 
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 enum class TensorType {
     UNSUPPORTED,
@@ -36,7 +37,9 @@ class Tensor(private val nativeHandle: Long) {
     }
 
     fun getBuffer(): ByteBuffer {
-        return nativeGetBuffer(nativeHandle)
+        val buffer = nativeGetBuffer(nativeHandle)
+        buffer.order(ByteOrder.nativeOrder())
+        return buffer
     }
 
     protected fun finalize() {

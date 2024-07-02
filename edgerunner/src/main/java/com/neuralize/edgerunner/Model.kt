@@ -1,5 +1,7 @@
 package com.neuralize.edgerunner
 
+import java.nio.ByteBuffer
+
 enum class Delegate {
     CPU,
     GPU,
@@ -11,12 +13,19 @@ enum class Status {
     FAIL,
 }
 
-class Model(private val modelPath: String) {
+class Model() {
     private var nativeHandle: Long = 0
 
     init {
         System.loadLibrary("model_jni")
+    }
+
+    constructor(modelPath: String) : this() {
         nativeHandle = nativeCreate(modelPath)
+    }
+
+    constructor(modelBuffer: ByteBuffer) : this() {
+        nativeHandle = nativeCreateFromBuffer(modelBuffer)
     }
 
     fun getName(): String {
@@ -60,6 +69,8 @@ class Model(private val modelPath: String) {
     }
 
     private external fun nativeCreate(modelPath: String): Long
+
+    private external fun nativeCreateFromBuffer(modelBuffer: ByteBuffer): Long
 
     private external fun nativeGetName(nativeHandle: Long): String
 
