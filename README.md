@@ -7,7 +7,7 @@
 </h1>
 
 <h4 align="center">
-    Kotlin bindings for [Edgerunner](https://github.com/neuralize-ai/edgerunner) library
+    Kotlin bindings for Edgerunner
 </h4>
 
 <div align="center">
