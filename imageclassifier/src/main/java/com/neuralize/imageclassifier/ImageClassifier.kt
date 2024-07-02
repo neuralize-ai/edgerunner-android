@@ -38,9 +38,10 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
     init {
         OpenCVLoader.initLocal()
 
-        loadTime = measureTime {
-            model = Model(modelBuffer.asReadOnlyBuffer())
-        }.inWholeMilliseconds
+        loadTime =
+            measureTime {
+                model = Model(modelBuffer.asReadOnlyBuffer())
+            }.inWholeMilliseconds
 
         labelList = loadLabelList("imagenet_labels.txt")
     }
@@ -52,47 +53,49 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
         val bitmap = loadImageFromAssets(context, imageFilename) ?: return results
         var image = bitmapToMat(bitmap)
 
-        results.totalTime = measureTime {
-            // preprocess
-            val input = model.getInput(0) ?: return results
+        results.totalTime =
+            measureTime {
+                // preprocess
+                val input = model.getInput(0) ?: return results
 
-            val inputDimensions = input.getDimensions()
+                val inputDimensions = input.getDimensions()
 
-            val inputHeight = inputDimensions[1].toInt()
-            val inputWidth = inputDimensions[2].toInt()
+                val inputHeight = inputDimensions[1].toInt()
+                val inputWidth = inputDimensions[2].toInt()
 
-            resizeImage(image, inputHeight, inputWidth)
-            image = centerCropImage(image, inputHeight, inputWidth)
-            normalizeImage(image)
+                resizeImage(image, inputHeight, inputWidth)
+                image = centerCropImage(image, inputHeight, inputWidth)
+                normalizeImage(image)
 
-            val inputBuffer = input.getBuffer()
+                val inputBuffer = input.getBuffer()
 
-            writeImageToInputBuffer(image, inputBuffer)
+                writeImageToInputBuffer(image, inputBuffer)
 
-            // inference
-            val (executionStatus, timeTaken) = measureTimedValue {
-                model.execute()
-            }
+                // inference
+                val (executionStatus, timeTaken) =
+                    measureTimedValue {
+                        model.execute()
+                    }
 
-            results.inferenceTime = timeTaken.inWholeMilliseconds
+                results.inferenceTime = timeTaken.inWholeMilliseconds
 
-            if (executionStatus != Status.SUCCESS) {
-                return results
-            }
+                if (executionStatus != Status.SUCCESS) {
+                    return results
+                }
 
-            // post process
-            val output = model.getOutput(0) ?: return results
+                // post process
+                val output = model.getOutput(0) ?: return results
 
-            val outputBuffer = output.getBuffer()
+                val outputBuffer = output.getBuffer()
 
-            val probabilities = softmax(outputBuffer)
+                val probabilities = softmax(outputBuffer)
 
-            val probabilityIndex = topIndex(probabilities)
-            results.probability = probabilities[probabilityIndex]
-            val labelIndex = probabilityIndex + 1
+                val probabilityIndex = topIndex(probabilities)
+                results.probability = probabilities[probabilityIndex]
+                val labelIndex = probabilityIndex + 1
 
-            results.prediction = labelList[labelIndex]
-        }.inWholeMilliseconds
+                results.prediction = labelList[labelIndex]
+            }.inWholeMilliseconds
 
         return results
     }
@@ -153,7 +156,7 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
             Size(newWidth.toDouble(), newHeight.toDouble()),
             0.0,
             0.0,
-            Imgproc.INTER_LINEAR
+            Imgproc.INTER_LINEAR,
         )
     }
 
@@ -221,7 +224,7 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
         buffer.asFloatBuffer().get(bufferArray)
         Log.d(
             "ImageClassifier",
-            "$message:\nsize: ${bufferArray.size}\nvalues: ${bufferArray.joinToString(", ")}"
+            "$message:\nsize: ${bufferArray.size}\nvalues: ${bufferArray.joinToString(", ")}",
         )
     }
 
