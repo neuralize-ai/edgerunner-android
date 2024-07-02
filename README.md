@@ -21,7 +21,7 @@
 
 Edgerunner Android provides a Kotlin wrapper for the [Edgerunner](https://github.com/neuralize-ai/edgerunner) AI inference library. This library is a work in progress, currently offering inference of tflite models on CPU. Support for GPU and vendor-specific NPU inference will follow incrementally along with various other inference engines. See [Edgerunner](https://github.com/neuralize-ai/edgerunner) for more details.
 
-The [Edgerunner](https://github.com/neuralize-ai/edgerunner) wrapper logic and public Kotlin classes are found in [edgerunner](./edgerunner).
+The wrapper logic and public Kotlin classes are found in the [edgerunner Android library](./edgerunner).
 
 ## 🛠 Installation
 
@@ -38,22 +38,13 @@ import com.neuralize.edgerunner.Model
 
 ...
 
-/* read model file into a ByteBuffer */
+/* read model file into a ByteBuffer -> modelBuffer */
 ...
 
 val model = Model(modelBuffer.asReadOnlyBuffer())
 
-val numInputs = model.getNumInputs()
-val numOutputs = model.getNumOutputs()
-
-/* edgerunner.Tensor */
-val input = model.getInput(0 /* input tensor index */) ?: /* handle error */
-
-val inputDimensions = input.getDimensions()
-val inputSize = input.getSize()
-
 /* ByteBuffer, direct access to input buffer for model inference */
-val inputBuffer = input.getBuffer()
+val inputBuffer = model.getInput(0)?.getBuffer() ?: /* handle error */
 
 /* write input to `inputBuffer` */
 ...
