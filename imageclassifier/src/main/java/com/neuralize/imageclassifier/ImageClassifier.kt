@@ -166,4 +166,18 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
             }
         }
     }
+
+    private fun softmax(output: ByteBuffer): List<Float> {
+        val floatBuffer = output.asFloatBuffer()
+        val outputList = FloatArray(floatBuffer.remaining())
+        floatBuffer.get(outputList)
+
+        val maxOutput = outputList.maxOrNull() ?: throw IllegalArgumentException("output buffer is empty")
+
+        val softmaxValues = outputList.map { exp((it - maxOutput).toDouble()).toFloat() }
+
+        val expSum = softmaxValues.sum()
+
+        return softmaxValues.map { it / expSum }
+    }
 }
