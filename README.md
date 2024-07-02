@@ -7,7 +7,7 @@
 </h1>
 
 <h4 align="center">
-    Universal AI inference library for mobile devices.
+    Kotlin bindings for [Edgerunner](https://github.com/neuralize-ai/edgerunner) library
 </h4>
 
 <div align="center">
