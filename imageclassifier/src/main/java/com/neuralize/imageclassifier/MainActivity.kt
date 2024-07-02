@@ -5,38 +5,39 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.neuralize.imageclassifier.ui.theme.EdgerunnerTheme
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.nio.ByteBuffer
 
@@ -58,8 +59,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Classifier(modifier: Modifier = Modifier) {
-    var result by remember {
-        mutableStateOf("no result")
+    var results by remember {
+        mutableStateOf(Results())
     }
 
     var imageFile by remember {
@@ -69,7 +70,7 @@ fun Classifier(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceEvenly
+        verticalArrangement = Arrangement.SpaceEvenly,
     ) {
         ImageFilePicker(
             currentImageFile = imageFile,
@@ -81,21 +82,20 @@ fun Classifier(modifier: Modifier = Modifier) {
         Classify(
             imageFileName = imageFile,
             onResult = {
-                result = it
+                results = it
             },
         )
 
-        Text(
-            text = "Result: $result",
-            modifier = modifier
-        )
+        HorizontalDivider()
+
+        ResultsDisplay(results)
     }
 }
 
 @Composable
 fun ImageFilePicker(
     currentImageFile: String,
-    onFileChoice: (String) -> Unit
+    onFileChoice: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val imageFiles: List<String> =
@@ -116,18 +116,15 @@ fun ImageFilePicker(
             title = {
                 Text("Choose image")
             },
-            text = { 
+            text = {
                 LazyColumn {
                     items(imageFiles) { fileName ->
                         Text(
                             text = fileName,
                             color = if (currentImageFile == fileName) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.tertiary,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(0.dp, 8.dp)
-                                .clickable {
+                            modifier = Modifier.fillMaxWidth().padding(0.dp, 8.dp).clickable {
                                     onFileChoice(fileName)
-                                }
+                                },
                         )
                         HorizontalDivider()
                     }
@@ -137,13 +134,16 @@ fun ImageFilePicker(
                 Button(onClick = { showFilePicker = false }) {
                     Text("OK")
                 }
-            }
+            },
         )
     }
 }
 
 @Composable
-fun Classify(imageFileName: String, onResult: (String) -> Unit) {
+fun Classify(
+    imageFileName: String,
+    onResult: (Results) -> Unit,
+) {
     val context = LocalContext.current
 
     val modelFileName = "mobilenet_v3_small.tflite"
@@ -190,8 +190,8 @@ fun Classify(imageFileName: String, onResult: (String) -> Unit) {
                 executeJob = executionScope.launch {
                     isExecuting = true
                     withContext(Dispatchers.IO) {
-                        val result = imageClassifier?.classify(imageFileName)
-                        result?.let { onResult(it) }
+                        val results = imageClassifier?.classify(imageFileName)
+                        results?.let { onResult(it) }
                         isExecuting = false
                     }
                 }
@@ -213,6 +213,22 @@ fun Classify(imageFileName: String, onResult: (String) -> Unit) {
             enabled = isExecuting,
         ) {
             Text("Cancel")
+        }
+    }
+}
+
+@Composable
+fun ResultsDisplay(results: Results) {
+    Card {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text("Prediction: ${results.prediction} (${100 * results.probability}%)")
+            Text("LoadTime (ms): ${results.loadTime}")
+            Text("Inference time (ms): ${results.inferenceTime}")
+            Text("total time (ms): ${results.totalTime}")
         }
     }
 }
