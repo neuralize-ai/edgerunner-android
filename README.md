@@ -67,6 +67,8 @@ val outputBuffer = model.getOutput(0)?.getBuffer() ?: /* handle error */
 ...
 ```
 
+The full API for `Model` and `Tensor` can be found in [Model.kt](./edgerunner/src/main/java/com/neuralize/edgerunner/Model.kt) and [Tensor.kt](./edgerunner/src/main/java/com/neuralize/edgerunner/Tensor.kt) respectively.
+
 ## 📜 Licensing
 
 See the [LICENSING](LICENSE.txt) document.
