@@ -35,8 +35,60 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
     }
 
     fun classify(imageFilename: String): String {
+        // load image
+        val bitmap = loadImageFromAssets(context, imageFilename) ?: return ""
+        var image = bitmapToMat(bitmap)
+
+        var inferenceTime: Duration
+        val (result, totalTime) = measureTimedValue {
+
+            // preprocess
+            val input = model.getInput(0) ?: return ""
+
+            val inputDimensions = input.getDimensions()
+
+            val inputHeight = inputDimensions[1].toInt()
+            val inputWidth = inputDimensions[2].toInt()
+
+            resizeImage(image, inputHeight, inputWidth)
+            image = centerCropImage(image, inputHeight, inputWidth)
+            normalizeImage(image)
+
+            val inputBuffer = input.getBuffer()
+
+            writeImageToInputBuffer(image, inputBuffer)
+
+            // inference
+            val (executionStatus, timeTaken) = measureTimedValue {
+                model.execute()
+            }
+
+            inferenceTime = timeTaken
+
+            if (executionStatus != Status.SUCCESS) {
+                return ""
+            }
+
+            // post process
+            val output = model.getOutput(0) ?: return ""
+
+            val outputBuffer = output.getBuffer()
+
+            val probabilities = softmax(outputBuffer)
+
+            val probabilityIndex = topIndex(probabilities)
+            val probability = probabilities[probabilityIndex]
+            val labelIndex = probabilityIndex + 1
+
+            labelList[labelIndex]
+        }
+
+        Log.d("ImageClassifier", "inferenceTime: ${inferenceTime}")
+        Log.d("ImageClassifier", "totalTime: ${totalTime}")
+
         return result
     }
+
     private fun loadLabelList(labelsFileName: String): List<String> {
         val assetManager = context.assets
         val inputStream = assetManager.open(labelsFileName)
@@ -65,6 +117,7 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
         mat.convertTo(mat, CvType.CV_32F, 1.0 / 255)
         return mat
     }
+
     private fun resizeImage(
         image: Mat,
         height: Int,
@@ -179,5 +232,10 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
         val expSum = softmaxValues.sum()
 
         return softmaxValues.map { it / expSum }
+    }
+
+    private fun topIndex(probabilities: List<Float>): Int {
+        val index = probabilities.indices.maxByOrNull { probabilities[it] } ?: -1
+        return index
     }
 }
