@@ -123,4 +123,12 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
         val cropRegion = Rect(cropLeft, cropTop, cropHeight, cropWidth)
         return image.submat(cropRegion)
     }
+
+    private fun normalizeImage(image: Mat) {
+        val mean = Scalar(0.485, 0.456, 0.406)
+        val std = Scalar(0.229, 0.224, 0.225)
+
+        Core.subtract(image, mean, image)
+        Core.divide(image, std, image)
+    }
 }
