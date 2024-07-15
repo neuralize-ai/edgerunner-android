@@ -36,10 +36,10 @@ In general, the library can be used as follows;
 ```kotlin
 import com.neuralize.edgerunner.Model
 
-...
+// ...
 
 /* read model file into a ByteBuffer -> modelBuffer */
-...
+// ...
 
 val model = Model(modelBuffer.asReadOnlyBuffer())
 
@@ -47,7 +47,7 @@ val model = Model(modelBuffer.asReadOnlyBuffer())
 val inputBuffer = model.getInput(0)?.getBuffer() ?: /* handle error */
 
 /* write input to `inputBuffer` */
-...
+// ...
 
 val executionStatus = model.execute()
 
@@ -55,7 +55,7 @@ val executionStatus = model.execute()
 val outputBuffer = model.getOutput(0)?.getBuffer() ?: /* handle error */
 
 /* interpret output */
-...
+// ...
 ```
 
 The full API for `Model` and `Tensor` can be found in [Model.kt](./edgerunner/src/main/java/com/neuralize/edgerunner/Model.kt) and [Tensor.kt](./edgerunner/src/main/java/com/neuralize/edgerunner/Tensor.kt) respectively.
