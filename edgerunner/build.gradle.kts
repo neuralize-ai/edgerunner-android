@@ -12,7 +12,7 @@ tasks.register("conanInstall") {
         val buildDir = File("edgerunner/build")
         buildDir.mkdirs()
         val buildTypes = listOf("Debug", "Release", "RelWithDebInfo")
-        val architectures = listOf("armv7", "armv8", "x86", "x86_64")
+        val architectures = listOf("armv8", "x86_64")
         buildTypes.forEach { buildType ->
             architectures.forEach { arch ->
                 val cmd =
