@@ -24,12 +24,26 @@ tasks.register("conanInstall") {
                         .redirectOutput(ProcessBuilder.Redirect.PIPE)
                         .redirectError(ProcessBuilder.Redirect.PIPE)
                         .start()
-                val sout = process.inputStream.bufferedReader().readText()
-                val serr = process.errorStream.bufferedReader().readText()
+
+                val sout = process.inputStream.bufferedReader()
+                val serr = process.errorStream.bufferedReader()
+
+                val outputThread = Thread {
+                    sout.lines().forEach { println(it) }
+                }
+                val errorThread = Thread {
+                    serr.lines().forEach { println(it) }
+                }
+
+                outputThread.start()
+                errorThread.start()
+
+                outputThread.join()
+                errorThread.join()
+
                 process.waitFor()
-                println("$sout $serr")
                 if (process.exitValue() != 0) {
-                    throw Exception("out> $sout err> $serr\nCommand: $cmd")
+                    throw Exception("Command failed with exit code ${process.exitValue()}")
                 }
             }
         }
@@ -54,6 +68,10 @@ android {
                 cppFlags += "-std=c++17"
                 arguments("-DCMAKE_TOOLCHAIN_FILE=conan_android_toolchain.cmake")
             }
+        }
+
+        ndk {
+            abiFilters += setOf("arm64-v8a", "x86_64")
         }
     }
 
