@@ -54,7 +54,7 @@ class Model(nativeLibraryDir: String) {
 
     fun getDelegate(): Delegate {
         val delegate = nativeGetDelegate(nativeHandle)
-        return Delegate.values().first { it.ordinal == delegate }
+        return Delegate.entries.first { it.ordinal == delegate }
     }
 
     fun applyDelegate(delegate: Delegate): Int {
@@ -63,7 +63,7 @@ class Model(nativeLibraryDir: String) {
 
     fun execute(): Status {
         val statusValue = nativeExecute(nativeHandle)
-        return Status.values().first { it.ordinal == statusValue }
+        return Status.entries.first { it.ordinal == statusValue }
     }
 
     protected fun finalize() {
