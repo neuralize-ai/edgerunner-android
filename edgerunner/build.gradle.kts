@@ -12,7 +12,8 @@ tasks.register("conanInstall") {
         val buildDir = File("edgerunner/build")
         buildDir.mkdirs()
         val buildTypes = listOf("Debug", "Release", "RelWithDebInfo")
-        val architectures = listOf("armv8", "x86_64")
+        val architectures = listOf("armv8")
+        val edgerunnerOptions = "-o edgerunner/*:with_gpu=True -o edgerunner/*:with_npu=True"
         buildTypes.forEach { buildType ->
             architectures.forEach { arch ->
                 val cmd =
@@ -71,7 +72,14 @@ android {
         }
 
         ndk {
-            abiFilters += setOf("arm64-v8a", "x86_64")
+            abiFilters += setOf("arm64-v8a")
+        }
+
+    }
+
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
         }
     }
 
