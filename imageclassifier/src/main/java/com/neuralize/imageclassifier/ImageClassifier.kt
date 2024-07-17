@@ -38,9 +38,11 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
     init {
         OpenCVLoader.initLocal()
 
+        val nativeLibDir = context.applicationInfo.nativeLibraryDir
+
         loadTime =
             measureTime {
-                model = Model(modelBuffer.asReadOnlyBuffer())
+                model = Model(nativeLibDir, modelBuffer.asReadOnlyBuffer())
             }.inWholeMilliseconds
 
         labelList = loadLabelList("imagenet_labels.txt")

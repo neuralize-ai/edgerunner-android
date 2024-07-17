@@ -13,18 +13,20 @@ enum class Status {
     FAIL,
 }
 
-class Model() {
+class Model(nativeLibraryDir: String) {
     private var nativeHandle: Long = 0
 
     init {
         System.loadLibrary("model_jni")
+
+        nativeSetLibDir(nativeLibraryDir)
     }
 
-    constructor(modelPath: String) : this() {
+    constructor(nativeLibraryDir: String, modelPath: String) : this(nativeLibraryDir) {
         nativeHandle = nativeCreate(modelPath)
     }
 
-    constructor(modelBuffer: ByteBuffer) : this() {
+    constructor(nativeLibraryDir: String, modelBuffer: ByteBuffer) : this(nativeLibraryDir) {
         nativeHandle = nativeCreateFromBuffer(modelBuffer)
     }
 
@@ -98,4 +100,6 @@ class Model() {
     private external fun nativeExecute(nativeHandle: Long): Int
 
     private external fun nativeDestroy(nativeHandle: Long)
+
+    private external fun nativeSetLibDir(dir: String)
 }
