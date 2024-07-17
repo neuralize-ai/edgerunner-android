@@ -1,4 +1,3 @@
-import com.android.build.gradle.internal.tasks.factory.dependsOn
 
 plugins {
     alias(libs.plugins.android.library)
@@ -17,7 +16,7 @@ tasks.register("conanInstall") {
         buildTypes.forEach { buildType ->
             architectures.forEach { arch ->
                 val cmd =
-                    "$conanExecutable install ../src/main/cpp --profile android -s build_type=$buildType -s arch=$arch --build missing -c tools.cmake.cmake_layout:build_folder_vars=['settings.arch']"
+                    "$conanExecutable install ../src/main/cpp --profile android -s build_type=$buildType -s arch=$arch --build missing $edgerunnerOptions -c tools.cmake.cmake_layout:build_folder_vars=['settings.arch']"
                 println(">> $cmd \n")
                 val process =
                     ProcessBuilder(cmd.split(" "))
