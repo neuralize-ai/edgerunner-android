@@ -73,4 +73,14 @@ JNIEXPORT void JNICALL Java_com_neuralize_edgerunner_Model_nativeDestroy(
   auto *model = reinterpret_cast<JniModel *>(modelPtr);
   delete model;
 }
+
+JNIEXPORT void JNICALL Java_com_neuralize_edgerunner_Model_nativeSetLibDir(
+        JNIEnv *env, jobject obj, jstring dir) {
+    const char* dirCStr = env->GetStringUTFChars(dir, nullptr);
+    std::string libDir{dirCStr};
+    libDir += ";/vendor/lib/rfsa/adsp;/vendor/dsp/cdsp;/system/lib/rfsa/adsp;/system/vendor/lib/rfsa/adsp;/dsp";
+
+    setenv("ADSP_LIBRARY_PATH", libDir.c_str(), 1 /*override*/);
+}
+
 }
