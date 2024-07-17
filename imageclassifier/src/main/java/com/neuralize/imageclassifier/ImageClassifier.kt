@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
+import com.neuralize.edgerunner.Delegate
 import com.neuralize.edgerunner.Model
 import com.neuralize.edgerunner.Status
 import org.opencv.android.OpenCVLoader
@@ -46,6 +47,8 @@ class ImageClassifier(private val context: Context, modelBuffer: ByteBuffer) {
             }.inWholeMilliseconds
 
         labelList = loadLabelList("imagenet_labels.txt")
+
+        model.applyDelegate(delegate = Delegate.NPU)
     }
 
     fun classify(imageFilename: String): Results {
